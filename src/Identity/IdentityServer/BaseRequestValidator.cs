@@ -37,7 +37,6 @@ public abstract class BaseRequestValidator<T> where T : class
     private readonly IDeviceService _deviceService;
     private readonly IEventService _eventService;
     private readonly IOrganizationDuoWebTokenProvider _organizationDuoWebTokenProvider;
-    private readonly ITemporaryDuoWebV4SDKService _duoWebV4SDKService;
     private readonly IOrganizationRepository _organizationRepository;
     private readonly IOrganizationUserRepository _organizationUserRepository;
     private readonly IApplicationCacheService _applicationCacheService;
@@ -61,7 +60,6 @@ public abstract class BaseRequestValidator<T> where T : class
         IUserService userService,
         IEventService eventService,
         IOrganizationDuoWebTokenProvider organizationDuoWebTokenProvider,
-        ITemporaryDuoWebV4SDKService duoWebV4SDKService,
         IOrganizationRepository organizationRepository,
         IOrganizationUserRepository organizationUserRepository,
         IApplicationCacheService applicationCacheService,
@@ -82,7 +80,6 @@ public abstract class BaseRequestValidator<T> where T : class
         _userService = userService;
         _eventService = eventService;
         _organizationDuoWebTokenProvider = organizationDuoWebTokenProvider;
-        _duoWebV4SDKService = duoWebV4SDKService;
         _organizationRepository = organizationRepository;
         _organizationUserRepository = organizationUserRepository;
         _applicationCacheService = applicationCacheService;
@@ -432,19 +429,6 @@ public abstract class BaseRequestValidator<T> where T : class
                 {
                     return false;
                 }
-                // DUO SDK v4 Update: try to validate the token - PM-5156 addresses tech debt
-                if (FeatureService.IsEnabled(FeatureFlagKeys.DuoRedirect))
-                {
-                    if (type == TwoFactorProviderType.Duo)
-                    {
-                        if (!token.Contains(':'))
-                        {
-                            // We have to send the provider to the DuoWebV4SDKService to create the DuoClient
-                            var provider = user.GetTwoFactorProvider(TwoFactorProviderType.Duo);
-                            return await _duoWebV4SDKService.ValidateAsync(token, provider, user);
-                        }
-                    }
-                }
 
                 return await _userManager.VerifyTwoFactorTokenAsync(user,
                     CoreHelpers.CustomProviderName(type), token);
@@ -452,20 +436,6 @@ public abstract class BaseRequestValidator<T> where T : class
                 if (!organization?.TwoFactorProviderIsEnabled(type) ?? true)
                 {
                     return false;
-                }
-
-                // DUO SDK v4 Update: try to validate the token - PM-5156 addresses tech debt
-                if (FeatureService.IsEnabled(FeatureFlagKeys.DuoRedirect))
-                {
-                    if (type == TwoFactorProviderType.OrganizationDuo)
-                    {
-                        if (!token.Contains(':'))
-                        {
-                            // We have to send the provider to the DuoWebV4SDKService to create the DuoClient
-                            var provider = organization.GetTwoFactorProvider(TwoFactorProviderType.OrganizationDuo);
-                            return await _duoWebV4SDKService.ValidateAsync(token, provider, user);
-                        }
-                    }
                 }
 
                 return await _organizationDuoWebTokenProvider.ValidateAsync(token, organization, user);
@@ -495,7 +465,7 @@ public abstract class BaseRequestValidator<T> where T : class
                     var duoResponse = new Dictionary<string, object>
                     {
                         ["Host"] = provider.MetaData["Host"],
-                        ["AuthUrl"] = await _duoWebV4SDKService.GenerateAsync(provider, user),
+                        ["AuthUrl"] = token,
                     };
 
                     return duoResponse;
@@ -522,10 +492,11 @@ public abstract class BaseRequestValidator<T> where T : class
             case TwoFactorProviderType.OrganizationDuo:
                 if (await _organizationDuoWebTokenProvider.CanGenerateTwoFactorTokenAsync(organization))
                 {
+                    var authUrl = await _organizationDuoWebTokenProvider.GenerateAsync(organization, user);
                     var duoResponse = new Dictionary<string, object>
                     {
                         ["Host"] = provider.MetaData["Host"],
-                        ["AuthUrl"] = await _duoWebV4SDKService.GenerateAsync(provider, user),
+                        ["AuthUrl"] = authUrl
                     };
 
                     return duoResponse;

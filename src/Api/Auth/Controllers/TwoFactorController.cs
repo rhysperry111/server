@@ -6,6 +6,7 @@ using Bit.Api.Models.Response;
 using Bit.Core.Auth.Enums;
 using Bit.Core.Auth.LoginFeatures.PasswordlessLogin.Interfaces;
 using Bit.Core.Auth.Models.Business.Tokenables;
+using Bit.Core.Auth.Services;
 using Bit.Core.Auth.Utilities;
 using Bit.Core.Context;
 using Bit.Core.Entities;
@@ -29,7 +30,7 @@ public class TwoFactorController : Controller
     private readonly IUserService _userService;
     private readonly IOrganizationRepository _organizationRepository;
     private readonly IOrganizationService _organizationService;
-    private readonly GlobalSettings _globalSettings;
+    private readonly IDuoUniversalClientService _duoUniversalClientService;
     private readonly UserManager<User> _userManager;
     private readonly ICurrentContext _currentContext;
     private readonly IVerifyAuthRequestCommand _verifyAuthRequestCommand;
@@ -39,7 +40,7 @@ public class TwoFactorController : Controller
         IUserService userService,
         IOrganizationRepository organizationRepository,
         IOrganizationService organizationService,
-        GlobalSettings globalSettings,
+        IDuoUniversalClientService duoUniversalClientService,
         UserManager<User> userManager,
         ICurrentContext currentContext,
         IVerifyAuthRequestCommand verifyAuthRequestCommand,
@@ -48,7 +49,7 @@ public class TwoFactorController : Controller
         _userService = userService;
         _organizationRepository = organizationRepository;
         _organizationService = organizationService;
-        _globalSettings = globalSettings;
+        _duoUniversalClientService = duoUniversalClientService;
         _userManager = userManager;
         _currentContext = currentContext;
         _verifyAuthRequestCommand = verifyAuthRequestCommand;
@@ -157,25 +158,10 @@ public class TwoFactorController : Controller
     public async Task<TwoFactorDuoResponseModel> PutDuo([FromBody] UpdateTwoFactorDuoRequestModel model)
     {
         var user = await CheckAsync(model, true);
-        try
-        {
-            // for backwards compatibility - will be removed with PM-8107
-            DuoApi duoApi = null;
-            if (model.ClientId != null && model.ClientSecret != null)
-            {
-                duoApi = new DuoApi(model.ClientId, model.ClientSecret, model.Host);
-            }
-            else
-            {
-                duoApi = new DuoApi(model.IntegrationKey, model.SecretKey, model.Host);
-            }
-            await duoApi.JSONApiCall("GET", "/auth/v2/check");
-        }
-        catch (DuoException)
-        {
+
+        var _ = _duoUniversalClientService.BuildDuoClientAsync(user) ??
             throw new BadRequestException(
                 "Duo configuration settings are not valid. Please re-check the Duo Admin panel.");
-        }
 
         model.ToUser(user);
         await _userService.UpdateTwoFactorProviderAsync(user, TwoFactorProviderType.Duo);

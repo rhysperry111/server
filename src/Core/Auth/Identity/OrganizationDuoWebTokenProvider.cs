@@ -1,9 +1,8 @@
 ﻿using Bit.Core.AdminConsole.Entities;
-using Bit.Core.Auth.Enums;
-using Bit.Core.Auth.Models;
-using Bit.Core.Auth.Utilities.Duo;
+using Bit.Core.Auth.Models.Business.Tokenables;
+using Bit.Core.Auth.Services;
 using Bit.Core.Entities;
-using Bit.Core.Settings;
+using Bit.Core.Tokens;
 
 namespace Bit.Core.Auth.Identity;
 
@@ -11,66 +10,60 @@ public interface IOrganizationDuoWebTokenProvider : IOrganizationTwoFactorTokenP
 
 public class OrganizationDuoWebTokenProvider : IOrganizationDuoWebTokenProvider
 {
-    private readonly GlobalSettings _globalSettings;
+    private readonly IDuoUniversalClientService _duoUniversalClientService;
+    private readonly IDataProtectorTokenFactory<DuoUserStateTokenable> _dataProtectionService;
 
-    public OrganizationDuoWebTokenProvider(GlobalSettings globalSettings)
+    public OrganizationDuoWebTokenProvider(
+        IDuoUniversalClientService duoUniversalClientService,
+        IDataProtectorTokenFactory<DuoUserStateTokenable> tokenFactory)
     {
-        _globalSettings = globalSettings;
+        _duoUniversalClientService = duoUniversalClientService;
+        _dataProtectionService = tokenFactory;
     }
 
     public Task<bool> CanGenerateTwoFactorTokenAsync(Organization organization)
     {
-        if (organization == null || !organization.Enabled || !organization.Use2fa)
-        {
-            return Task.FromResult(false);
-        }
-
-        var provider = organization.GetTwoFactorProvider(TwoFactorProviderType.OrganizationDuo);
-        var canGenerate = organization.TwoFactorProviderIsEnabled(TwoFactorProviderType.OrganizationDuo)
-            && HasProperMetaData(provider);
-        return Task.FromResult(canGenerate);
+        return Task.FromResult(
+            _duoUniversalClientService.OrganizationUserCanUseDuoTwoFactor(organization) != null
+            );
     }
 
-    public Task<string> GenerateAsync(Organization organization, User user)
+    public async Task<string> GenerateAsync(Organization organization, User user)
     {
-        if (organization == null || !organization.Enabled || !organization.Use2fa)
+        var duoClient = await _duoUniversalClientService.BuildDuoClientAsync(user, organization);
+        if (duoClient == null)
         {
-            return Task.FromResult<string>(null);
+            return null;
         }
 
-        var provider = organization.GetTwoFactorProvider(TwoFactorProviderType.OrganizationDuo);
-        if (!HasProperMetaData(provider))
-        {
-            return Task.FromResult<string>(null);
-        }
+        var state = _dataProtectionService.Protect(new DuoUserStateTokenable(user));
+        var authUrl = duoClient.GenerateAuthUri(user.Email, state);
 
-        var signatureRequest = DuoWeb.SignRequest(provider.MetaData["IKey"].ToString(),
-            provider.MetaData["SKey"].ToString(), _globalSettings.Duo.AKey, user.Email);
-        return Task.FromResult(signatureRequest);
+        return authUrl;
     }
 
-    public Task<bool> ValidateAsync(string token, Organization organization, User user)
+    public async Task<bool> ValidateAsync(string token, Organization organization, User user)
     {
-        if (organization == null || !organization.Enabled || !organization.Use2fa)
+        var duoClient = await _duoUniversalClientService.BuildDuoClientAsync(user, organization);
+        if (duoClient == null)
         {
-            return Task.FromResult(false);
+            return false;
         }
 
-        var provider = organization.GetTwoFactorProvider(TwoFactorProviderType.OrganizationDuo);
-        if (!HasProperMetaData(provider))
+        var parts = token.Split("|");
+        var authCode = parts[0];
+        var state = parts[1];
+
+        _dataProtectionService.TryUnprotect(state, out var tokenable);
+        if (!tokenable.Valid || !tokenable.TokenIsValid(user))
         {
-            return Task.FromResult(false);
+            return false;
         }
 
-        var response = DuoWeb.VerifyResponse(provider.MetaData["IKey"].ToString(),
-            provider.MetaData["SKey"].ToString(), _globalSettings.Duo.AKey, token);
-
-        return Task.FromResult(response == user.Email);
-    }
-
-    private bool HasProperMetaData(TwoFactorProvider provider)
-    {
-        return provider?.MetaData != null && provider.MetaData.ContainsKey("IKey") &&
-            provider.MetaData.ContainsKey("SKey") && provider.MetaData.ContainsKey("Host");
+        // Duo.Client compares the email from the received IdToken with user.Email to verify a bad actor hasn't used
+        // their authCode with a victims credentials
+        var res = await duoClient.ExchangeAuthorizationCodeFor2faResult(authCode, user.Email);
+        // If the result of the exchange doesn't throw an exception and it's not null, then it's valid
+        return res.AuthResult.Result == "allow";
     }
 }
