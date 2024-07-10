@@ -191,7 +191,7 @@ public class TwoFactorController : Controller
     public async Task<TwoFactorDuoResponseModel> PutOrganizationDuo(string id,
         [FromBody] UpdateTwoFactorDuoRequestModel model)
     {
-        await CheckAsync(model, false);
+        var user = await CheckAsync(model, false);
 
         var orgIdGuid = new Guid(id);
         if (!await _currentContext.ManagePolicies(orgIdGuid))
@@ -200,25 +200,10 @@ public class TwoFactorController : Controller
         }
 
         var organization = await _organizationRepository.GetByIdAsync(orgIdGuid) ?? throw new NotFoundException();
-        try
-        {
-            // for backwards compatibility - will be removed with PM-8107
-            DuoApi duoApi = null;
-            if (model.ClientId != null && model.ClientSecret != null)
-            {
-                duoApi = new DuoApi(model.ClientId, model.ClientSecret, model.Host);
-            }
-            else
-            {
-                duoApi = new DuoApi(model.IntegrationKey, model.SecretKey, model.Host);
-            }
-            await duoApi.JSONApiCall("GET", "/auth/v2/check");
-        }
-        catch (DuoException)
-        {
-            throw new BadRequestException(
-                "Duo configuration settings are not valid. Please re-check the Duo Admin panel.");
-        }
+
+        var _ = _duoUniversalClientService.BuildDuoClientAsync(user, organization) ??
+        throw new BadRequestException(
+            "Duo configuration settings are not valid. Please re-check the Duo Admin panel.");
 
         model.ToOrganization(organization);
         await _organizationService.UpdateTwoFactorProviderAsync(organization,

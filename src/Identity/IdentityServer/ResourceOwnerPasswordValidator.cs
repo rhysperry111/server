@@ -33,6 +33,7 @@ public class ResourceOwnerPasswordValidator : BaseRequestValidator<ResourceOwner
         IUserService userService,
         IEventService eventService,
         IOrganizationDuoWebTokenProvider organizationDuoWebTokenProvider,
+        IOrganizationRepository organizationRepository,
         IOrganizationUserRepository organizationUserRepository,
         IApplicationCacheService applicationCacheService,
         IMailService mailService,

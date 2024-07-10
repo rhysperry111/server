@@ -42,20 +42,12 @@ public class UpdateTwoFactorAuthenticatorRequestModel : SecretVerificationReques
 
 public class UpdateTwoFactorDuoRequestModel : SecretVerificationRequestModel, IValidatableObject
 {
-    /*
-        To support both v2 and v4 we need to remove the required annotation from the properties.
-        todo - the required annotation will be added back in PM-8107.
-    */
+    [Required]
     [StringLength(50)]
     public string ClientId { get; set; }
+    [Required]
     [StringLength(50)]
     public string ClientSecret { get; set; }
-    //todo - will remove SKey and IKey with PM-8107
-    [StringLength(50)]
-    public string IntegrationKey { get; set; }
-    //todo - will remove SKey and IKey with PM-8107
-    [StringLength(50)]
-    public string SecretKey { get; set; }
     [Required]
     [StringLength(50)]
     public string Host { get; set; }
@@ -72,15 +64,10 @@ public class UpdateTwoFactorDuoRequestModel : SecretVerificationRequestModel, IV
             providers.Remove(TwoFactorProviderType.Duo);
         }
 
-        Temporary_SyncDuoParams();
-
         providers.Add(TwoFactorProviderType.Duo, new TwoFactorProvider
         {
             MetaData = new Dictionary<string, object>
             {
-                //todo - will remove SKey and IKey with PM-8107
-                ["SKey"] = SecretKey,
-                ["IKey"] = IntegrationKey,
                 ["ClientSecret"] = ClientSecret,
                 ["ClientId"] = ClientId,
                 ["Host"] = Host
@@ -103,15 +90,10 @@ public class UpdateTwoFactorDuoRequestModel : SecretVerificationRequestModel, IV
             providers.Remove(TwoFactorProviderType.OrganizationDuo);
         }
 
-        Temporary_SyncDuoParams();
-
         providers.Add(TwoFactorProviderType.OrganizationDuo, new TwoFactorProvider
         {
             MetaData = new Dictionary<string, object>
             {
-                //todo - will remove SKey and IKey with PM-8107
-                ["SKey"] = SecretKey,
-                ["IKey"] = IntegrationKey,
                 ["ClientSecret"] = ClientSecret,
                 ["ClientId"] = ClientId,
                 ["Host"] = Host
@@ -124,34 +106,21 @@ public class UpdateTwoFactorDuoRequestModel : SecretVerificationRequestModel, IV
 
     public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (!DuoApi.ValidHost(Host))
+        if (!ValidHost(Host))
         {
             yield return new ValidationResult("Host is invalid.", [nameof(Host)]);
         }
-        if (string.IsNullOrWhiteSpace(ClientSecret) && string.IsNullOrWhiteSpace(ClientId) &&
-            string.IsNullOrWhiteSpace(SecretKey) && string.IsNullOrWhiteSpace(IntegrationKey))
-        {
-            yield return new ValidationResult("Neither v2 or v4 values are valid.", [nameof(IntegrationKey), nameof(SecretKey), nameof(ClientSecret), nameof(ClientId)]);
-        }
     }
 
-    /*
-        use this method to ensure that both v2 params and v4 params are in sync
-        todo will be removed in pm-8107
-    */
-    private void Temporary_SyncDuoParams()
+    public bool ValidHost(string host)
     {
-        // Even if IKey and SKey exist prioritize v4 params ClientId and ClientSecret
-        if (!string.IsNullOrWhiteSpace(ClientSecret) && !string.IsNullOrWhiteSpace(ClientId))
+        if (Uri.TryCreate($"https://{host}", UriKind.Absolute, out var uri))
         {
-            SecretKey = ClientSecret;
-            IntegrationKey = ClientId;
+            return (string.IsNullOrWhiteSpace(uri.PathAndQuery) || uri.PathAndQuery == "/") &&
+                uri.Host.StartsWith("api-") &&
+                (uri.Host.EndsWith(".duosecurity.com") || uri.Host.EndsWith(".duofederal.com"));
         }
-        else if (!string.IsNullOrWhiteSpace(SecretKey) && !string.IsNullOrWhiteSpace(IntegrationKey))
-        {
-            ClientSecret = SecretKey;
-            ClientId = IntegrationKey;
-        }
+        return false;
     }
 }
 
