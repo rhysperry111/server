@@ -12,9 +12,18 @@ public class OrganizationEntityTypeConfiguration : IEntityTypeConfiguration<Orga
             .Property(o => o.Id)
             .ValueGeneratedNever();
 
+        // Deprecated https://bitwarden.atlassian.net/browse/PM-10863
         builder.Property(c => c.LimitCollectionCreationDeletion)
             .ValueGeneratedNever()
-            .HasDefaultValue(true);
+            .HasDefaultValue(false);
+
+        builder.Property<bool>(c => c.LimitCollectionCreation)
+            .ValueGeneratedNever()
+            .HasDefaultValue(false);
+
+        builder.Property<bool>(c => c.LimitCollectionDeletion)
+            .ValueGeneratedNever()
+            .HasDefaultValue(false);
 
         builder.Property(c => c.AllowAdminAccessToAllCollectionItems)
             .ValueGeneratedNever()
