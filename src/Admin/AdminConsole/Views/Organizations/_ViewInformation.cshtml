@@ -1,4 +1,4 @@
-﻿@model OrganizationViewModel
+@model OrganizationViewModel
 <dl class="row">
     <dt class="col-sm-4 col-lg-3">Id</dt>
     <dd class="col-sm-8 col-lg-9"><code>@Model.Organization.Id</code></dd>
@@ -54,7 +54,7 @@
     <dd class="col-sm-8 col-lg-9">@(Model.Organization.AllowAdminAccessToAllCollectionItems ? "On" : "Off")</dd>
 
     <dt class="col-sm-4 col-lg-3">Limit collection creation to administrators</dt>
-    <dd class="col-sm-8 col-lg-9">@(Model.Organization.LimitCollectionCreationDeletion ? "On" : "Off")</dd>
+    <dd class="col-sm-8 col-lg-9">@(Model.Organization.LimitCollectionCreation ? "On" : "Off")</dd>
 </dl>
 
 <h2>Secrets Manager</h2>

@@ -48,7 +48,7 @@ public class BulkCollectionAuthorizationHandlerTests
     }
 
     [Theory, BitAutoData, CollectionCustomization]
-    public async Task CanCreateAsync_WhenUser_WithLimitCollectionCreationDeletionFalse_Success(
+    public async Task CanCreateAsync_WhenUser_WithLimitCollectionCreationFalse_Success(
         SutProvider<BulkCollectionAuthorizationHandler> sutProvider,
         ICollection<Collection> collections,
         CurrentContextOrganization organization)
@@ -947,7 +947,7 @@ public class BulkCollectionAuthorizationHandlerTests
     }
 
     [Theory, BitAutoData, CollectionCustomization]
-    public async Task CanDeleteAsync_WhenUser_LimitCollectionCreationDeletionFalse_WithCanManagePermission_Success(
+    public async Task CanDeleteAsync_WhenUser_LimitCollectionCreationFalse_WithCanManagePermission_Success(
         SutProvider<BulkCollectionAuthorizationHandler> sutProvider,
         ICollection<CollectionDetails> collections,
         CurrentContextOrganization organization)
@@ -982,7 +982,7 @@ public class BulkCollectionAuthorizationHandlerTests
     [BitAutoData(OrganizationUserType.Admin)]
     [BitAutoData(OrganizationUserType.Owner)]
     [BitAutoData(OrganizationUserType.User)]
-    public async Task CanDeleteAsync_LimitCollectionCreationDeletionFalse_AllowAdminAccessToAllCollectionItemsFalse_WithCanManagePermission_Success(
+    public async Task CanDeleteAsync_LimitCollectionCreationFalse_AllowAdminAccessToAllCollectionItemsFalse_WithCanManagePermission_Success(
         OrganizationUserType userType,
         SutProvider<BulkCollectionAuthorizationHandler> sutProvider,
         ICollection<CollectionDetails> collections,
@@ -1017,7 +1017,7 @@ public class BulkCollectionAuthorizationHandlerTests
     [Theory, CollectionCustomization]
     [BitAutoData(OrganizationUserType.Admin)]
     [BitAutoData(OrganizationUserType.Owner)]
-    public async Task CanDeleteAsync_WhenAdminOrOwner_LimitCollectionCreationDeletionTrue_AllowAdminAccessToAllCollectionItemsFalse_WithCanManagePermission_Success(
+    public async Task CanDeleteAsync_WhenAdminOrOwner_LimitCollectionCreationTrue_AllowAdminAccessToAllCollectionItemsFalse_WithCanManagePermission_Success(
         OrganizationUserType userType,
         SutProvider<BulkCollectionAuthorizationHandler> sutProvider,
         ICollection<CollectionDetails> collections,
@@ -1052,7 +1052,7 @@ public class BulkCollectionAuthorizationHandlerTests
     [Theory, CollectionCustomization]
     [BitAutoData(OrganizationUserType.Admin)]
     [BitAutoData(OrganizationUserType.Owner)]
-    public async Task CanDeleteAsync_WhenAdminOrOwner_LimitCollectionCreationDeletionTrue_AllowAdminAccessToAllCollectionItemsFalse_WithoutCanManagePermission_Failure(
+    public async Task CanDeleteAsync_WhenAdminOrOwner_LimitCollectionCreationTrue_AllowAdminAccessToAllCollectionItemsFalse_WithoutCanManagePermission_Failure(
         OrganizationUserType userType,
         SutProvider<BulkCollectionAuthorizationHandler> sutProvider,
         ICollection<CollectionDetails> collections,
@@ -1086,7 +1086,7 @@ public class BulkCollectionAuthorizationHandlerTests
     }
 
     [Theory, BitAutoData, CollectionCustomization]
-    public async Task CanDeleteAsync_WhenUser_LimitCollectionCreationDeletionTrue_AllowAdminAccessToAllCollectionItemsTrue_Failure(
+    public async Task CanDeleteAsync_WhenUser_LimitCollectionCreationTrue_AllowAdminAccessToAllCollectionItemsTrue_Failure(
         SutProvider<BulkCollectionAuthorizationHandler> sutProvider,
         ICollection<CollectionDetails> collections,
         CurrentContextOrganization organization)
@@ -1119,7 +1119,7 @@ public class BulkCollectionAuthorizationHandlerTests
     }
 
     [Theory, BitAutoData, CollectionCustomization]
-    public async Task CanDeleteAsync_WhenUser_LimitCollectionCreationDeletionTrue_AllowAdminAccessToAllCollectionItemsFalse_Failure(
+    public async Task CanDeleteAsync_WhenUser_LimitCollectionCreationTrue_AllowAdminAccessToAllCollectionItemsFalse_Failure(
         SutProvider<BulkCollectionAuthorizationHandler> sutProvider,
         ICollection<CollectionDetails> collections,
         CurrentContextOrganization organization)
@@ -1262,7 +1262,7 @@ public class BulkCollectionAuthorizationHandlerTests
             { collections.First().OrganizationId,
                 new OrganizationAbility
                 {
-                    LimitCollectionCreationDeletion = true,
+                    LimitCollectionCreation = true,
                     AllowAdminAccessToAllCollectionItems = true
                 }
             }
@@ -1343,7 +1343,7 @@ public class BulkCollectionAuthorizationHandlerTests
     {
         var organizationAbility = new OrganizationAbility();
         organizationAbility.Id = organization.Id;
-        organizationAbility.LimitCollectionCreationDeletion = limitCollectionCreationDeletion;
+        organizationAbility.LimitCollectionCreation = limitCollectionCreationDeletion;
         organizationAbility.AllowAdminAccessToAllCollectionItems = allowAdminAccessToAllCollectionItems;
 
         sutProvider.GetDependency<IApplicationCacheService>().GetOrganizationAbilityAsync(organizationAbility.Id)

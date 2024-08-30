@@ -44,7 +44,7 @@ public class ProfileProviderOrganizationResponseModel : ProfileOrganizationRespo
         ProviderId = organization.ProviderId;
         ProviderName = organization.ProviderName;
         ProductTierType = StaticStore.GetPlan(organization.PlanType).ProductTier;
-        LimitCollectionCreationDeletion = organization.LimitCollectionCreationDeletion;
+        LimitCollectionCreation = organization.LimitCollectionCreation;
         AllowAdminAccessToAllCollectionItems = organization.AllowAdminAccessToAllCollectionItems;
     }
 }

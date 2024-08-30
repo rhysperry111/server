@@ -300,7 +300,9 @@ public class Organization : ITableObject<Guid>, IStorableSubscriber, IRevisable,
         UseSecretsManager = license.UseSecretsManager;
         SmSeats = license.SmSeats;
         SmServiceAccounts = license.SmServiceAccounts;
-        LimitCollectionCreationDeletion = license.LimitCollectionCreationDeletion;
+        // license.LimitCollectionCreationDeletion is deprecated, but is
+        // ingested here to support older license version.
+        LimitCollectionCreation = (license.LimitCollectionCreation || license.LimitCollectionCreationDeletion);
         AllowAdminAccessToAllCollectionItems = license.AllowAdminAccessToAllCollectionItems;
     }
 }

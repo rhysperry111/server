@@ -40,6 +40,6 @@ public class ProviderUserOrganizationDetails
     [JsonConverter(typeof(HtmlEncodingStringConverter))]
     public string ProviderName { get; set; }
     public PlanType PlanType { get; set; }
-    public bool LimitCollectionCreationDeletion { get; set; }
+    public bool LimitCollectionCreation { get; set; }
     public bool AllowAdminAccessToAllCollectionItems { get; set; }
 }

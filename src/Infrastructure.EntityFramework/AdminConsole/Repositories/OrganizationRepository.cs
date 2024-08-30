@@ -99,7 +99,7 @@ public class OrganizationRepository : Repository<Core.AdminConsole.Entities.Orga
                 UseScim = e.UseScim,
                 UseCustomPermissions = e.UseCustomPermissions,
                 UsePolicies = e.UsePolicies,
-                LimitCollectionCreationDeletion = e.LimitCollectionCreationDeletion,
+                LimitCollectionCreation = e.LimitCollectionCreation,
                 AllowAdminAccessToAllCollectionItems = e.AllowAdminAccessToAllCollectionItems
             }).ToListAsync();
         }

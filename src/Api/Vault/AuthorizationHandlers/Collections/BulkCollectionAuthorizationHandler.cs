@@ -101,7 +101,7 @@ public class BulkCollectionAuthorizationHandler : BulkAuthorizationHandler<BulkC
                 break;
 
             case null:
-                // requirement isn't actually nullable but since we use the 
+                // requirement isn't actually nullable but since we use the
                 // not null when trick it makes the compiler think that requirement
                 // could actually be nullable.
                 throw new UnreachableException();
@@ -124,7 +124,7 @@ public class BulkCollectionAuthorizationHandler : BulkAuthorizationHandler<BulkC
         }
 
         // If the limit collection management setting is disabled, allow any user to create collections
-        if (await GetOrganizationAbilityAsync(org) is { LimitCollectionCreationDeletion: false })
+        if (await GetOrganizationAbilityAsync(org) is { LimitCollectionCreation: false })
         {
             return true;
         }
@@ -246,17 +246,17 @@ public class BulkCollectionAuthorizationHandler : BulkAuthorizationHandler<BulkC
             return true;
         }
 
-        // If AllowAdminAccessToAllCollectionItems is true, Owners and Admins can delete any collection, regardless of LimitCollectionCreationDeletion setting
+        // If AllowAdminAccessToAllCollectionItems is true, Owners and Admins can delete any collection, regardless of LimitCollectionCreation setting
         if (await AllowAdminAccessToAllCollectionItems(org) && org is { Type: OrganizationUserType.Owner or OrganizationUserType.Admin })
         {
             return true;
         }
 
-        // If LimitCollectionCreationDeletion is false, AllowAdminAccessToAllCollectionItems setting is irrelevant.
+        // If LimitCollectionCreation is false, AllowAdminAccessToAllCollectionItems setting is irrelevant.
         // Ensure acting user has manage permissions for all collections being deleted
-        // If LimitCollectionCreationDeletion is true, only Owners and Admins can delete collections they manage
+        // If LimitCollectionCreation is true, only Owners and Admins can delete collections they manage
         var organizationAbility = await GetOrganizationAbilityAsync(org);
-        var canDeleteManagedCollections = organizationAbility is { LimitCollectionCreationDeletion: false } ||
+        var canDeleteManagedCollections = organizationAbility is { LimitCollectionCreation: false } ||
                                           org is { Type: OrganizationUserType.Owner or OrganizationUserType.Admin };
         if (canDeleteManagedCollections && await CanManageCollectionsAsync(resources, org))
         {

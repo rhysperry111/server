@@ -12,7 +12,7 @@ public class OrganizationEntityTypeConfiguration : IEntityTypeConfiguration<Orga
             .Property(o => o.Id)
             .ValueGeneratedNever();
 
-        builder.Property(c => c.LimitCollectionCreationDeletion)
+        builder.Property(c => c.LimitCollectionCreation)
             .ValueGeneratedNever()
             .HasDefaultValue(true);
 

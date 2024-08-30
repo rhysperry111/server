@@ -53,8 +53,8 @@ public class OrganizationLicense : ILicense
         UseSecretsManager = org.UseSecretsManager;
         SmSeats = org.SmSeats;
         SmServiceAccounts = org.SmServiceAccounts;
-        LimitCollectionCreationDeletion = org.LimitCollectionCreationDeletion;
         AllowAdminAccessToAllCollectionItems = org.AllowAdminAccessToAllCollectionItems;
+        LimitCollectionCreation = org.LimitCollectionCreation;
 
         if (subscriptionInfo?.Subscription == null)
         {
@@ -138,8 +138,10 @@ public class OrganizationLicense : ILicense
     public bool UseSecretsManager { get; set; }
     public int? SmSeats { get; set; }
     public int? SmServiceAccounts { get; set; }
+    // Deprecated. Renamed `LimitCollectionCreation`.
     public bool LimitCollectionCreationDeletion { get; set; } = true;
     public bool AllowAdminAccessToAllCollectionItems { get; set; } = true;
+    public bool LimitCollectionCreation { get; set; } = true;
     public bool Trial { get; set; }
     public LicenseType? LicenseType { get; set; }
     public string Hash { get; set; }
@@ -195,8 +197,8 @@ public class OrganizationLicense : ILicense
                     (Version >= 13 || !p.Name.Equals(nameof(UsePasswordManager))) &&
                     (Version >= 13 || !p.Name.Equals(nameof(SmSeats))) &&
                     (Version >= 13 || !p.Name.Equals(nameof(SmServiceAccounts))) &&
-                    // LimitCollectionCreationDeletion was added in Version 14
-                    (Version >= 14 || !p.Name.Equals(nameof(LimitCollectionCreationDeletion))) &&
+                    // `LimitCollectionCreationDeletion` was added in Version 14. It was renamed to `LimitCollectionCreation` in Version 16.
+                    ((Version >= 14 && Version < 16) || !p.Name.Equals(nameof(LimitCollectionCreationDeletion))) &&
                     // AllowAdminAccessToAllCollectionItems was added in Version 15
                     (Version >= 15 || !p.Name.Equals(nameof(AllowAdminAccessToAllCollectionItems))) &&
                     (
@@ -206,7 +208,9 @@ public class OrganizationLicense : ILicense
                             !p.Name.Equals(nameof(Issued)) &&
                             !p.Name.Equals(nameof(Refresh))
                         )
-                    ))
+                    ) &&
+                    // `LimitCollectionCreation` was added in Version 16. It replaces `LimitCollectionCreationDeletion`
+                    ((Version >= 16) || !p.Name.Equals(nameof(LimitCollectionCreation))))
                 .OrderBy(p => p.Name)
                 .Select(p => $"{p.Name}:{Utilities.CoreHelpers.FormatLicenseSignatureValue(p.GetValue(this, null))}")
                 .Aggregate((c, n) => $"{c}|{n}");
@@ -368,9 +372,13 @@ public class OrganizationLicense : ILicense
             }
 
             /*
-             * Version 14 added LimitCollectionCreationDeletion and Version 15 added AllowAdminAccessToAllCollectionItems,
-             * however these are just user settings and it is not worth failing validation if they mismatch.
-             * They are intentionally excluded.
+             * Versions 14, 15, and 16 are intentionally excluded.
+             * - Version 14 added `LimitCollectionCreationDeletion`
+             * - Version 15 added `AllowAdminAccessToAllCollectionItems`
+             * - Version 16 renamed `LimitCollectionCreationDeletion` to
+             *   `LimitCollectionCreation`
+             *
+             * These are just user settings and it is not worth failing validation if they mismatch.
              */
 
             return valid;

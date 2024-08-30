@@ -253,7 +253,7 @@ public class OrganizationUserRepositoryTests
         Assert.Equal(orgUser1.Permissions, result.Permissions);
         Assert.Equal(organization.SmSeats, result.SmSeats);
         Assert.Equal(organization.SmServiceAccounts, result.SmServiceAccounts);
-        Assert.Equal(organization.LimitCollectionCreationDeletion, result.LimitCollectionCreationDeletion);
+        Assert.Equal(organization.LimitCollectionCreation, result.LimitCollectionCreation);
         Assert.Equal(organization.AllowAdminAccessToAllCollectionItems, result.AllowAdminAccessToAllCollectionItems);
     }
 }
