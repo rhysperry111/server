@@ -459,3 +459,7 @@ BEGIN
         [Id] = @Id
 END
 GO
+
+-- Sync existing data
+UPDATE [dbo].[Organization]
+SET [LimitCollectionCreation] = [LimitCollectionCreationDeletion]
