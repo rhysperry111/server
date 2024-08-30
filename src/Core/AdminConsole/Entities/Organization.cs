@@ -89,11 +89,12 @@ public class Organization : ITableObject<Guid>, IStorableSubscriber, IRevisable,
     public int? MaxAutoscaleSmSeats { get; set; }
     public int? MaxAutoscaleSmServiceAccounts { get; set; }
     /// <summary>
-    /// If set to true, only owners, admins, and some custom users can create and delete collections.
-    /// If set to false, any organization member can create a collection, and any member can delete a collection that
-    /// they have Can Manage permissions for.
+    /// If set to true, only owners, admins, and some custom users can create
+    /// collections. If set to false, any organization member can create a
+    /// collection. Regardless of this setting: any member can delete a
+    /// collection that they have Can Manage permissions for.
     /// </summary>
-    public bool LimitCollectionCreationDeletion { get; set; }
+    public bool LimitCollectionCreation { get; set; }
     /// <summary>
     /// If set to true, admins, owners, and some custom users can read/write all collections and items in the Admin Console.
     /// If set to false, users generally need collection-level permissions to read/write a collection or its items.
