@@ -25,5 +25,7 @@ public class OrganizationEntityTypeConfiguration : IEntityTypeConfiguration<Orga
             o => o.UseTotp);
 
         builder.ToTable(nameof(Organization));
+
+        builder.Property<bool>("LimitCollectionCreationDeletion").HasDefaultValue(false);
     }
 }
