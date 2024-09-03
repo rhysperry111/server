@@ -123,6 +123,12 @@ LEFT JOIN
     [dbo].[OrganizationSponsorship] OS ON OS.[SponsoringOrganizationUserID] = OU.[Id]
 GO
 
+IF OBJECT_ID('[dbo].[OrganizationView]') IS NOT NULL
+    BEGIN
+        EXECUTE sp_refreshview N'[dbo].[OrganizationView]';
+    END
+GO
+
 -- Refresh Stored Procedures
 CREATE OR ALTER PROCEDURE [dbo].[Organization_Create]
     @Id UNIQUEIDENTIFIER OUTPUT,
