@@ -14,18 +14,18 @@ public class OrganizationEntityTypeConfiguration : IEntityTypeConfiguration<Orga
 
         builder.Property(c => c.LimitCollectionCreation)
             .ValueGeneratedNever()
-            .HasDefaultValue(true);
+            .HasDefaultValue(false);
 
         builder.Property(c => c.AllowAdminAccessToAllCollectionItems)
             .ValueGeneratedNever()
             .HasDefaultValue(true);
+
+        builder.Property<bool>("LimitCollectionCreationDeletion").HasDefaultValue(false);
 
         NpgsqlIndexBuilderExtensions.IncludeProperties(
             builder.HasIndex(o => new { o.Id, o.Enabled }),
             o => o.UseTotp);
 
         builder.ToTable(nameof(Organization));
-
-        builder.Property<bool>("LimitCollectionCreationDeletion").HasDefaultValue(false);
     }
 }
