@@ -83,9 +83,14 @@ namespace Bit.SqliteMigrations.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("LimitCollectionCreationDeletion")
+                    b.Property<bool>("LimitCollectionCreation")
                         .HasColumnType("INTEGER")
-                        .HasDefaultValue(true);
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("LimitCollectionCreationDeletion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
 
                     b.Property<int?>("MaxAutoscaleSeats")
                         .HasColumnType("INTEGER");
